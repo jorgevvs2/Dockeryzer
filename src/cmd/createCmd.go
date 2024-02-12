@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var name, path string
+var name string
 
 var createCmd = &cobra.Command{
 	Use:   "create",

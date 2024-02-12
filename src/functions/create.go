@@ -2,36 +2,50 @@ package functions
 
 import (
 	"fmt"
+	"log"
+	"os"
 	"os/exec"
 )
 
+func deferCloseFile(f *os.File) {
+	err := f.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func createDockerfileContent() {
+	f, err := os.Create("Dockeryzer.Dockerfile")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer deferCloseFile(f)
+
+	content := "FROM joaovictornsv/portfolio\nEXPOSE 3000"
+	_, err2 := f.WriteString(content)
+
+	if err2 != nil {
+		log.Fatal(err2)
+	}
+}
+
 func Create(name string) {
-	// Caminho para o Dockerfile
-	dockerfilePath := "C:\\Users\\jorge\\OneDrive\\Documentos\\local-list\\Dockerfile"
+	createDockerfileContent()
+	fmt.Println("Dockerfile created")
 
-	// Nome da imagem
-	imageName := name
+	if name == "" {
+		return
+	}
 
-	// Construir a imagem Docker usando o Dockerfile
-	cmd := exec.Command("docker", "build", "-t", imageName, "-f", dockerfilePath, ".")
+	// Build an image using the created Dockerfile
+	cmd := exec.Command("docker", "build", "-t", name, "-f", "Dockeryzer.Dockerfile", ".")
 	out, err := cmd.CombinedOutput()
+
 	if err != nil {
-		fmt.Println("Erro ao construir imagem Docker:", err)
+		fmt.Println("Error on build image:", err)
 		fmt.Println(string(out))
 		return
 	}
-
-	fmt.Println("Imagem Docker criada com sucesso:", imageName)
-
-	// Criar um contêiner a partir da imagem
-	containerName := name
-	runCmd := exec.Command("docker", "run", "--name", containerName, "-d", imageName)
-	out, err = runCmd.CombinedOutput()
-	if err != nil {
-		fmt.Println("Erro ao criar contêiner Docker:", err)
-		fmt.Println(string(out))
-		return
-	}
-
-	fmt.Println("Contêiner Docker criado com sucesso:", containerName)
+	fmt.Printf("Image %s created!\n", name)
 }
