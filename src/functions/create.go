@@ -21,8 +21,23 @@ func createDockerfileContent() {
 	}
 
 	defer deferCloseFile(f)
+	content := "# --------------> The build image\n" +
+		"FROM node:latest AS builder\n" +
+		"RUN mkdir -p /workspace/app && chown node:node /workspace -R\n" +
+		"USER node:node\n" +
+		"WORKDIR /workspace/app\n" +
+		"COPY --chown=node:node . /workspace/app\n" +
+		"RUN npm ci --only=production && npm run build\n" +
+		"\n" +
+		"# --------------> The production image\n" +
+		"FROM node@sha256:2f46fd49c767554c089a5eb219115313b72748d8f62f5eccb58ef52bc36db4ad\n" +
+		"RUN npm i -g serve\n" +
+		"COPY --from=builder  --chown=node:node /workspace/app/dist /app\n" +
+		"USER node\n" +
+		"ENV NODE_ENV production\n" +
+		"WORKDIR /app\n" +
+		"ENTRYPOINT [\"serve\", \"-p\", \"3000\",  \"-s\", \"/app\"]\n"
 
-	content := "FROM joaovictornsv/portfolio\nEXPOSE 3000"
 	_, err2 := f.WriteString(content)
 
 	if err2 != nil {
