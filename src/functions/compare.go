@@ -42,9 +42,9 @@ func Compare(image1, image2 string) {
 		fmt.Printf("Images have the same size: %d\n Bytes\n", image1Inspect.Size)
 	} else if image2Inspect.Size > image1Inspect.Size {
 		percent := 100 - (float32(image1Inspect.Size)/float32(image2Inspect.Size))*100
-		fmt.Printf("Image %s is %f%% smaller than image %s\n", image1, percent, image2)
+		fmt.Printf("Image %s is %.2f%% smaller than image %s\n", image1, percent, image2)
 	} else {
 		percent := 100 - (float32(image2Inspect.Size)/float32(image1Inspect.Size))*100
-		fmt.Printf("Image %s is %f%% smaller than image %s\n", image2, percent, image1)
+		fmt.Printf("Image %s is %.2f%% smaller than image %s\n", image2, percent, image1)
 	}
 }

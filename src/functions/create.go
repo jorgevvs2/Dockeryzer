@@ -22,7 +22,7 @@ func createDockerfileContent() {
 
 	defer deferCloseFile(f)
 	content := "# --------------> The build image\n" +
-		"FROM node:latest AS builder\n" +
+		"FROM node:alpine AS builder\n" +
 		"RUN mkdir -p /workspace/app && chown node:node /workspace -R\n" +
 		"USER node:node\n" +
 		"WORKDIR /workspace/app\n" +
@@ -30,7 +30,7 @@ func createDockerfileContent() {
 		"RUN npm ci --only=production && npm run build\n" +
 		"\n" +
 		"# --------------> The production image\n" +
-		"FROM node@sha256:2f46fd49c767554c089a5eb219115313b72748d8f62f5eccb58ef52bc36db4ad\n" +
+		"FROM node:alpine\n" +
 		"RUN npm i -g serve\n" +
 		"COPY --from=builder  --chown=node:node /workspace/app/dist /app\n" +
 		"USER node\n" +

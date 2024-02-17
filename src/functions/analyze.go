@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/docker/docker/client"
+	"math"
 )
 
 func Analyze(name string) {
@@ -29,7 +30,19 @@ func Analyze(name string) {
 	// Obtem a quantidade de camadas (sub-imagens)
 	numberOfLayers := len(imageInspect.RootFS.Layers)
 
+	sizeUnit := "MB"
+	sizeInMbs := float32(imageInspect.Size) / float32(math.Pow(10.0, 6))
+	sizeInGbs := float32(0.0)
+
+	finalSize := sizeInMbs
+	isMoreThanOneGb := sizeInMbs > 1000
+	if isMoreThanOneGb {
+		sizeUnit = "GB"
+		sizeInGbs = sizeInMbs / float32(math.Pow(10.0, 3))
+		finalSize = sizeInGbs
+	}
+
 	fmt.Printf("%s image details: \n", name)
-	fmt.Printf("- Size: %d Bytes\n", imageInspect.Size)
+	fmt.Printf("- Size: %.2f %s\n", finalSize, sizeUnit)
 	fmt.Printf("- Layers: %d \n", numberOfLayers)
 }
