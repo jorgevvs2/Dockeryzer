@@ -9,7 +9,7 @@ var name string
 
 var createCmd = &cobra.Command{
 	Use:   "create",
-	Short: "Command to create an docker image",
+	Short: "Command to generate a Dockerfile and create an Docker image (optional)",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		// This function will be executed when the "subcommand" is called
@@ -18,7 +18,7 @@ var createCmd = &cobra.Command{
 }
 
 func init() {
-	createCmd.Flags().StringVarP(&name, "name", "n", "", "Image Name")
+	createCmd.Flags().StringVarP(&name, "name", "n", "", "Image name to create")
 
 	rootCmd.AddCommand(createCmd)
 }

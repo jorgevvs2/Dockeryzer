@@ -8,7 +8,7 @@ import (
 
 var compareCmd = &cobra.Command{
 	Use:   "compare",
-	Short: "Command to compare two docker images",
+	Short: "Command to compare two Docker images",
 	Long:  ``,
 
 	Run: func(cmd *cobra.Command, args []string) {
