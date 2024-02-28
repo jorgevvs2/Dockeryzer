@@ -1,66 +1,69 @@
 package functions
 
 import (
+	"bufio"
 	"fmt"
-	"log"
-	"os"
+	"github.com/jorgevvs2/dockeryzer/src/utils"
 	"os/exec"
 )
 
-func deferCloseFile(f *os.File) {
-	err := f.Close()
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func createDockerfileContent() {
-	f, err := os.Create("Dockeryzer.Dockerfile")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer deferCloseFile(f)
-	content := "# --------------> The build image\n" +
-		"FROM node:alpine AS builder\n" +
-		"RUN mkdir -p /workspace/app && chown node:node /workspace -R\n" +
-		"USER node:node\n" +
-		"WORKDIR /workspace/app\n" +
-		"COPY --chown=node:node . /workspace/app\n" +
-		"RUN npm ci --only=production && npm run build\n" +
-		"\n" +
-		"# --------------> The production image\n" +
-		"FROM node:alpine\n" +
-		"RUN npm i -g serve\n" +
-		"COPY --from=builder  --chown=node:node /workspace/app/dist /app\n" +
-		"USER node\n" +
-		"ENV NODE_ENV production\n" +
-		"WORKDIR /app\n" +
-		"ENTRYPOINT [\"serve\", \"-p\", \"3000\",  \"-s\", \"/app\"]\n"
-
-	_, err2 := f.WriteString(content)
-
-	if err2 != nil {
-		log.Fatal(err2)
-	}
-}
-
 func Create(name string) {
-	createDockerfileContent()
-	fmt.Println("Dockerfile created")
+	utils.CreateDockerfileContent()
+	utils.CreateDockerignoreContent()
+
+	successOut := utils.GetSuccessOutput()
+	infoOut := utils.GetInfoOutput()
+	errorOut := utils.GetErrorOutput()
+
+	fmt.Println("New files:")
+	successOut.Println("\tDockeryzer.Dockerfile\n\t.dockerignore")
 
 	if name == "" {
+		fmt.Println("\nTo build your image, run one of the following commands::")
+		fmt.Println("- To specify a name for the image:")
+		infoOut.Println("\tdocker build -t <image-name> -f Dockeryzer.Dockerfile .")
+		fmt.Println("- To build without specifying a name:")
+		infoOut.Println("\tdocker build -f Dockeryzer.Dockerfile .")
 		return
 	}
 
-	// Build an image using the created Dockerfile
+	infoOut.Printf("\nBuilding your image %s...\n", name)
 	cmd := exec.Command("docker", "build", "-t", name, "-f", "Dockeryzer.Dockerfile", ".")
-	out, err := cmd.CombinedOutput()
 
+	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		fmt.Println("Error on build image:", err)
-		fmt.Println(string(out))
+		fmt.Println("Error on create pipe to handle stdout", err)
 		return
 	}
-	fmt.Printf("Image %s created!\n", name)
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		fmt.Println("Error on create pipe to handle stderr:", err)
+		return
+	}
+
+	err = cmd.Start()
+	if err != nil {
+		fmt.Println("Error on start command:", err)
+		return
+	}
+
+	go func() {
+		scanner := bufio.NewScanner(stdout)
+		for scanner.Scan() {
+			fmt.Println(scanner.Text())
+		}
+	}()
+
+	go func() {
+		scanner := bufio.NewScanner(stderr)
+		for scanner.Scan() {
+			fmt.Println(scanner.Text())
+		}
+	}()
+
+	err = cmd.Wait()
+	if err != nil {
+		errorOut.Println("Error on waiting command finish:", err)
+		return
+	}
 }
