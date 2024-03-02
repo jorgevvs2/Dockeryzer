@@ -5,8 +5,37 @@ import (
 	"os"
 )
 
-func getViteDockerfileContent() string {
-	dockerfileContent := `# --------------------> The build image
+func getViteDockerfileContent(ignoreComments bool) string {
+	if ignoreComments == true {
+		return `# --------------------> The build image
+FROM node:alpine AS builder
+
+RUN mkdir -p /workspace/app \
+    && chown node:node /workspace -R \
+    && npm cache clean --force
+
+USER node:node
+
+WORKDIR /workspace/app
+
+COPY --chown=node:node . /workspace/app
+
+RUN npm ci --only=production && npm run build
+
+# --------------------> The production image
+FROM node:alpine
+
+COPY --from=builder --chown=node:node /workspace/app/dist /app
+
+USER node
+
+WORKDIR /app
+
+CMD ["npx", "serve", "-p", "3000", "-s", "/app"]
+`
+	}
+
+	return `# --------------------> The build image
 # Use the Node.js image based on Debian Bullseye for the build phase.
 # Customization suggestion: You can change the base image to a different version of Node.js, such as 'node:slim' or 'node:alpine', if necessary.
 FROM node:alpine AS builder
@@ -48,17 +77,16 @@ WORKDIR /app
 # - If you prefer to use a different server or add more options to the execution command, you can modify the CMD as needed.
 CMD ["npx", "serve", "-p", "3000", "-s", "/app"]
 `
-	return dockerfileContent
 }
 
-func CreateDockerfileContent() {
+func CreateDockerfileContent(ignoreComments bool) {
 	f, err := os.Create("Dockeryzer.Dockerfile")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	defer DeferCloseFile(f)
-	content := getViteDockerfileContent()
+	content := getViteDockerfileContent(ignoreComments)
 
 	_, err2 := f.WriteString(content)
 

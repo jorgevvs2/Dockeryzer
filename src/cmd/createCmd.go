@@ -6,6 +6,7 @@ import (
 )
 
 var name string
+var ignoreComments bool
 
 var createCmd = &cobra.Command{
 	Use:   "create",
@@ -13,12 +14,13 @@ var createCmd = &cobra.Command{
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		// This function will be executed when the "subcommand" is called
-		functions.Create(name)
+		functions.Create(name, ignoreComments)
 	},
 }
 
 func init() {
 	createCmd.Flags().StringVarP(&name, "name", "n", "", "Image name to create")
+	createCmd.Flags().BoolVarP(&ignoreComments, "ignore-comments", "i", false, "No include comments to Dockerfile")
 
 	rootCmd.AddCommand(createCmd)
 }

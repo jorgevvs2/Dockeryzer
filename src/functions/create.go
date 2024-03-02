@@ -7,8 +7,8 @@ import (
 	"os/exec"
 )
 
-func Create(name string) {
-	utils.CreateDockerfileContent()
+func Create(name string, ignoreComments bool) {
+	utils.CreateDockerfileContent(ignoreComments)
 	utils.CreateDockerignoreContent()
 
 	successOut := utils.GetSuccessOutput()
