@@ -146,6 +146,36 @@ func PrintImageAnalyzeResults(name string, imageInspect types.ImageInspect, mini
 		fmt.Printf("  - Creation date: %s\n", GetImageFormattedCreationDate(imageInspect))
 		fmt.Printf("  - OS: %s\n", imageInspect.Os)
 	}
+
+	sizeInMBs := GetImageSizeInMBs(imageInspect)
+	numberOfLayers := GetImageNumberOfLayers(imageInspect)
+	nodeJsMajorVersion := GetImageNodeJsMajorVersionNumber(imageInspect)
+
+	isBigImage := sizeInMBs > 250
+	hasManyLayers := numberOfLayers > 10
+	isOutdatedNodeVersion := nodeJsMajorVersion < 16
+
+	shouldShowSuggestions := isBigImage || hasManyLayers || isOutdatedNodeVersion
+
+	if shouldShowSuggestions {
+		fmt.Println("\n Improvement suggestions:")
+	}
+
+	if isBigImage {
+		fmt.Println("  - Consider reducing the size of your image. Try using smaller base images and ensure that no unnecessary files are included.")
+	}
+
+	if hasManyLayers {
+		fmt.Println("  - Your image has multiple layers. Consider applying a multi-build stage strategy or combining commands to reduce the number of layers.")
+	}
+
+	if isOutdatedNodeVersion {
+		if nodeJsMajorVersion == 0 {
+			fmt.Println("  - No Node.js version detected. Ensure that your image is created correctly and includes a valid Node.js installation.")
+		} else {
+			fmt.Println("  - An outdated Node.js version is detected. It's recommended to use the latest version to ensure the security of your image.")
+		}
+	}
 }
 
 func PrintImageCompareLayersResults(image1 string, image1Inspect types.ImageInspect, image2 string, image2Inspect types.ImageInspect) {
