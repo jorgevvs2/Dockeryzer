@@ -39,14 +39,6 @@ func IsViteProject() bool {
 	return true
 }
 
-func IsNextProject() bool {
-	_, err := os.ReadFile("next.config.js")
-	if err != nil {
-		return false
-	}
-	return true
-}
-
 func IsExpressProject() bool {
 	if !hasPackageJson() {
 		return false
