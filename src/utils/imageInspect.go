@@ -157,7 +157,11 @@ func PrintImageAnalyzeResults(name string, imageInspect types.ImageInspect, mini
 
 	shouldShowSuggestions := isBigImage || hasManyLayers || isOutdatedNodeVersion
 
-	if !ignoreSuggestions && shouldShowSuggestions {
+	if ignoreSuggestions {
+		return
+	}
+
+	if shouldShowSuggestions {
 		fmt.Println("\n Improvement suggestions:")
 	}
 
