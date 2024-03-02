@@ -27,9 +27,9 @@ func Compare(image1, image2 string) {
 		panic(errImage2)
 	}
 
-	utils.PrintImageAnalyzeResults(image1, image1Inspect, true)
+	utils.PrintImageAnalyzeResults(image1, image1Inspect, true, true)
 	fmt.Println()
-	utils.PrintImageAnalyzeResults(image2, image2Inspect, true)
+	utils.PrintImageAnalyzeResults(image2, image2Inspect, true, true)
 	fmt.Println()
 
 	fmt.Println("Differences:")

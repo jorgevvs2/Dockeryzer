@@ -10,17 +10,13 @@ func getViteDockerfileContent(ignoreComments bool) string {
 		return `# --------------------> The build image
 FROM node:alpine AS builder
 
-RUN mkdir -p /workspace/app \
-    && chown node:node /workspace -R \
-    && npm cache clean --force
-
 USER node:node
 
 WORKDIR /workspace/app
 
 COPY --chown=node:node . /workspace/app
 
-RUN npm ci --only=production && npm run build
+RUN npm ci --only=production && npm run build && npm cache clean --force
 
 # --------------------> The production image
 FROM node:alpine
@@ -40,11 +36,6 @@ CMD ["npx", "serve", "-p", "3000", "-s", "/app"]
 # Customization suggestion: You can change the base image to a different version of Node.js, such as 'node:slim' or 'node:alpine', if necessary.
 FROM node:alpine AS builder
 
-# Create the /workspace/app directory, set permissions for the 'node' user, and clean npm cache.
-RUN mkdir -p /workspace/app \
-    && chown node:node /workspace -R \
-    && npm cache clean --force
-
 # Set the 'node:node' user to run subsequent commands, ensuring a secure and restricted environment.
 USER node:node
 
@@ -55,8 +46,8 @@ WORKDIR /workspace/app
 # Copy all files from the current host directory to the application's working directory in the container.
 COPY --chown=node:node . /workspace/app
 
-# Install only production dependencies, optimizing the build process.
-RUN npm ci --only=production && npm run build
+# Install only production dependencies, optimizing the build process, and clean npm cache.
+RUN npm ci --only=production && npm run build && npm cache clean --force
 
 # --------------------> The production image
 # Again, use the Node.js image based on Debian Bullseye for the production phase.
@@ -79,6 +70,78 @@ CMD ["npx", "serve", "-p", "3000", "-s", "/app"]
 `
 }
 
+func getExpressDockerfileContent(ignoreComments bool) string {
+	if ignoreComments == true {
+		return `# --------------------> The build image
+FROM node:alpine AS builder
+
+WORKDIR /workspace/app
+
+COPY --chown=node:node package*.json ./
+
+RUN npm ci --only=production && npm cache clean --force
+
+USER node:node
+
+COPY --chown=node:node . .
+
+# --------------------> The production image
+FROM node:alpine
+
+WORKDIR /workspace/app
+
+COPY --from=builder --chown=node:node /workspace/app .
+
+USER node
+
+ENTRYPOINT ["npm", "run", "start"]
+`
+	}
+
+	return `# --------------------> The build image
+# Use the Node.js image based on Alpine Linux as the base image for the build phase.
+FROM node:alpine AS builder
+
+# Set the working directory inside the container.
+WORKDIR /workspace/app
+
+# Copy package files (package.json and package-lock.json) to the container.
+COPY --chown=node:node package*.json ./
+
+# Install only production dependencies and clean npm cache to optimize the build process.
+RUN npm ci --only=production && npm cache clean --force
+
+# Set the user to run subsequent commands, ensuring a secure environment.
+USER node:node
+
+# Copy all files from the local directory to the application's working directory in the container.
+COPY --chown=node:node . .
+
+# --------------------> The production image
+# Use the Node.js image based on Alpine Linux for the production phase.
+FROM node:alpine
+
+# Set the working directory inside the container.
+WORKDIR /workspace/app
+
+# Copy files from the build phase to the production environment.
+COPY --from=builder --chown=node:node /workspace/app .
+
+# Set the default user to run subsequent commands.
+USER node
+
+# Define the command to start the application.
+ENTRYPOINT ["npm", "run", "start"]
+`
+}
+
+func getDockerfileContent(ignoreComments bool) string {
+	if IsViteProject() {
+		return getViteDockerfileContent(ignoreComments)
+	}
+	return getExpressDockerfileContent(ignoreComments)
+}
+
 func CreateDockerfileContent(ignoreComments bool) {
 	f, err := os.Create("Dockeryzer.Dockerfile")
 	if err != nil {
@@ -86,7 +149,7 @@ func CreateDockerfileContent(ignoreComments bool) {
 	}
 
 	defer DeferCloseFile(f)
-	content := getViteDockerfileContent(ignoreComments)
+	content := getDockerfileContent(ignoreComments)
 
 	_, err2 := f.WriteString(content)
 

@@ -27,5 +27,5 @@ func Analyze(name string) {
 		panic(err)
 	}
 
-	utils.PrintImageAnalyzeResults(name, imageInspect, false)
+	utils.PrintImageAnalyzeResults(name, imageInspect, false, false)
 }

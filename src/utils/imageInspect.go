@@ -134,7 +134,7 @@ func GetImageLayersWithColor(imageInspect types.ImageInspect) string {
 
 }
 
-func PrintImageAnalyzeResults(name string, imageInspect types.ImageInspect, minimal bool) {
+func PrintImageAnalyzeResults(name string, imageInspect types.ImageInspect, minimal bool, ignoreSuggestions bool) {
 	fmt.Printf("Details of image ")
 	GetBoldOutput().Printf("%s:\n", name)
 	fmt.Printf("  - Tags: %s\n", imageInspect.RepoTags)
@@ -157,7 +157,7 @@ func PrintImageAnalyzeResults(name string, imageInspect types.ImageInspect, mini
 
 	shouldShowSuggestions := isBigImage || hasManyLayers || isOutdatedNodeVersion
 
-	if shouldShowSuggestions {
+	if !ignoreSuggestions && shouldShowSuggestions {
 		fmt.Println("\n Improvement suggestions:")
 	}
 
@@ -202,7 +202,7 @@ func PrintImageCompareLayersResults(image1 string, image1Inspect types.ImageInsp
 	}
 
 	if layersDiff == 0 {
-		fmt.Printf("  - Images have the same number of layers: %d\n.", numberOfLayers2)
+		fmt.Printf("  - Images have the same number of layers: %d\n", numberOfLayers2)
 		return
 	}
 	fmt.Printf("  - Image ")
