@@ -87,15 +87,15 @@ func GetImageNodeJsVersionWithColor(imageInspect types.ImageInspect) string {
 
 	fmt.Printf("  - Node.js version: ")
 	if nodeJsMajorVersion < 14 {
-		return GetErrorOutput().Sprintf(nodeJsVersionString)
+		return ErrorSprintf(nodeJsVersionString)
 
 	}
 	if nodeJsMajorVersion >= 14 && nodeJsMajorVersion <= 16 {
-		return GetWarningOutput().Sprintf(nodeJsVersionString)
+		return WarningSprintf(nodeJsVersionString)
 
 	}
 
-	return GetSuccessOutput().Sprintf(nodeJsVersionString)
+	return SuccessSprintf(nodeJsVersionString)
 }
 
 func GetImageSizeWithColor(imageInspect types.ImageInspect) string {
@@ -103,16 +103,16 @@ func GetImageSizeWithColor(imageInspect types.ImageInspect) string {
 
 	fmt.Printf("  - Size: ")
 	if sizeInMBs < 250 {
-		return GetSuccessOutput().Sprintf("%s", GetImageSizeString(imageInspect))
+		return SuccessSprintf("%s", GetImageSizeString(imageInspect))
 
 	}
 
 	if sizeInMBs >= 250 && sizeInMBs <= 500 {
-		return GetWarningOutput().Sprintf("%s", GetImageSizeString(imageInspect))
+		return WarningSprintf("%s", GetImageSizeString(imageInspect))
 
 	}
 
-	return GetErrorOutput().Sprintf("%s", GetImageSizeString(imageInspect))
+	return ErrorSprintf("%s", GetImageSizeString(imageInspect))
 
 }
 
@@ -121,22 +121,22 @@ func GetImageLayersWithColor(imageInspect types.ImageInspect) string {
 
 	fmt.Printf("  - N. of Layers: ")
 	if numberOfLayers < 10 {
-		return GetSuccessOutput().Sprintf("%d", numberOfLayers)
+		return SuccessSprintf("%d", numberOfLayers)
 
 	}
 
 	if numberOfLayers >= 10 && numberOfLayers <= 20 {
-		return GetWarningOutput().Sprintf("%d", numberOfLayers)
+		return WarningSprintf("%d", numberOfLayers)
 
 	}
 
-	return GetErrorOutput().Sprintf("%d", numberOfLayers)
+	return ErrorSprintf("%d", numberOfLayers)
 
 }
 
 func PrintImageResults(name string, imageInspect types.ImageInspect, minimal bool, ignoreSuggestions bool) {
 	fmt.Printf("Details of image ")
-	GetBoldOutput().Printf("%s:\n", name)
+	BoldPrintf("%s:\n", name)
 	fmt.Printf("  - Tags: %s\n", imageInspect.RepoTags)
 	fmt.Println(GetImageSizeWithColor(imageInspect))
 	fmt.Println(GetImageLayersWithColor(imageInspect))
@@ -218,15 +218,15 @@ func PrintImageCompareLayersResults(image1 string, image1Inspect types.ImageInsp
 		return
 	}
 	fmt.Printf("  - Image ")
-	GetSuccessOutput().Printf("%s", minorImage)
+	SuccessPrintf("%s", minorImage)
 	fmt.Printf(" has ")
-	GetSuccessOutput().Printf("%d less layers", layersDiff)
+	SuccessPrintf("%d less layers", layersDiff)
 	fmt.Printf(" than image ")
-	GetErrorOutput().Printf("%s", biggerImage)
+	ErrorPrintf("%s", biggerImage)
 	fmt.Printf(" (")
-	GetSuccessOutput().Printf("%d", minorLayers)
+	SuccessPrintf("%d", minorLayers)
 	fmt.Printf(" < ")
-	GetErrorOutput().Printf("%d", mostLayers)
+	ErrorPrintf("%d", mostLayers)
 	fmt.Println(").")
 }
 
@@ -268,15 +268,15 @@ func PrintImageCompareSizeResults(image1 string, image1Inspect types.ImageInspec
 	percent := 100 - (float32(minorSize)/float32(biggerSize))*100
 
 	fmt.Printf("  - Image ")
-	GetSuccessOutput().Printf("%s", minorImage)
+	SuccessPrintf("%s", minorImage)
 	fmt.Printf(" is ")
-	GetSuccessOutput().Printf("%.2f%% smaller", percent)
+	SuccessPrintf("%.2f%% smaller", percent)
 	fmt.Printf(" than image ")
-	GetErrorOutput().Printf("%s", biggerImage)
+	ErrorPrintf("%s", biggerImage)
 	fmt.Printf(" (")
-	GetSuccessOutput().Printf(minorImageString)
+	SuccessPrintf(minorImageString)
 	fmt.Printf(" < ")
-	GetErrorOutput().Printf(biggerImageString)
+	ErrorPrintf(biggerImageString)
 	fmt.Println(").")
 }
 
@@ -306,14 +306,14 @@ func PrintImageCompareNodeJsResults(image1 string, image1Inspect types.ImageInsp
 		return
 	}
 	fmt.Printf("  - Image ")
-	GetSuccessOutput().Printf("%s", latestVersionImage)
+	SuccessPrintf("%s", latestVersionImage)
 	fmt.Printf(" is utilizing a ")
-	GetSuccessOutput().Printf("more recent")
+	SuccessPrintf("more recent")
 	fmt.Printf(" version of Node.js compared to image ")
-	GetErrorOutput().Printf("%s", minorVersionImage)
+	ErrorPrintf("%s", minorVersionImage)
 	fmt.Printf(" (")
-	GetSuccessOutput().Printf(biggerVersionStringImage)
+	SuccessPrintf(biggerVersionStringImage)
 	fmt.Printf(" > ")
-	GetErrorOutput().Printf(minorVersionStringImage)
+	ErrorPrintf(minorVersionStringImage)
 	fmt.Println(").")
 }

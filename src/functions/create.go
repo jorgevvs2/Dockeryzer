@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/jorgevvs2/dockeryzer/src/utils"
+	"os"
 	"os/exec"
 )
 
@@ -11,40 +12,36 @@ func Create(imageName string, ignoreComments bool) {
 	utils.CreateDockerfileContent(ignoreComments)
 	utils.CreateDockerignoreContent()
 
-	successOut := utils.GetSuccessOutput()
-	infoOut := utils.GetInfoOutput()
-	errorOut := utils.GetErrorOutput()
-
 	fmt.Println("New files:")
-	successOut.Println("\tDockeryzer.Dockerfile\n\t.dockerignore")
+	utils.SuccessPrintf("\tDockeryzer.Dockerfile\n\t.dockerignore\n")
 
 	if imageName == "" {
 		fmt.Println("\nTo build your image, run one of the following commands::")
 		fmt.Println("- To specify a imageName for the image:")
-		infoOut.Println("\tdocker build -t <image-imageName> -f Dockeryzer.Dockerfile .")
+		utils.InfoPrintf("\tdocker build -t <image-imageName> -f Dockeryzer.Dockerfile .\n")
 		fmt.Println("- To build without specifying a imageName:")
-		infoOut.Println("\tdocker build -f Dockeryzer.Dockerfile .")
+		utils.InfoPrintf("\tdocker build -f Dockeryzer.Dockerfile .\n")
 		return
 	}
 
-	infoOut.Printf("\nBuilding your image %s...\n", imageName)
+	utils.InfoPrintf("\nBuilding your image %s...\n", imageName)
 	cmd := exec.Command("docker", "build", "-t", imageName, "-f", "Dockeryzer.Dockerfile", ".")
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		fmt.Println("Error on create pipe to handle stdout", err)
-		return
+		utils.ErrorPrintf("Error on create pipe to handle stdout: %s\n", err)
+		os.Exit(0)
 	}
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		fmt.Println("Error on create pipe to handle stderr:", err)
-		return
+		utils.ErrorPrintf("Error on create pipe to handle stderr: %s\n", err)
+		os.Exit(0)
 	}
 
 	err = cmd.Start()
 	if err != nil {
-		fmt.Println("Error on start command:", err)
-		return
+		utils.ErrorPrintf("Error on start command: %s\n", err)
+		os.Exit(0)
 	}
 
 	go func() {
@@ -63,7 +60,7 @@ func Create(imageName string, ignoreComments bool) {
 
 	err = cmd.Wait()
 	if err != nil {
-		errorOut.Println("Error on waiting command finish:", err)
-		return
+		utils.ErrorPrintf("Error on waiting command finish: %s\n", err)
+		os.Exit(0)
 	}
 }
