@@ -1,35 +1,17 @@
 package functions
 
 import (
-	"context"
 	"fmt"
-	"github.com/docker/docker/client"
 	"github.com/jorgevvs2/dockeryzer/src/utils"
 )
 
 func Compare(image1, image2 string) {
-	ctx := context.Background()
-	// Crie um cliente Docker
-	cli, err := client.NewClientWithOpts(client.FromEnv)
-	if err != nil {
-		panic(err)
-	}
-	cli.NegotiateAPIVersion(ctx)
+	image1Inspect := utils.GetDockerImageInspectByIdOrName(image1)
+	image2Inspect := utils.GetDockerImageInspectByIdOrName(image2)
 
-	// Obtém a imagem pelo seu nome
-	image1Inspect, _, errImage1 := cli.ImageInspectWithRaw(context.Background(), image1)
-	if errImage1 != nil {
-		panic(errImage1)
-	}
-
-	image2Inspect, _, errImage2 := cli.ImageInspectWithRaw(context.Background(), image2)
-	if errImage2 != nil {
-		panic(errImage2)
-	}
-
-	utils.PrintImageAnalyzeResults(image1, image1Inspect, true, true)
+	utils.PrintImageCompareResults(image1, image1Inspect)
 	fmt.Println()
-	utils.PrintImageAnalyzeResults(image2, image2Inspect, true, true)
+	utils.PrintImageCompareResults(image2, image2Inspect)
 	fmt.Println()
 
 	fmt.Println("Differences:")

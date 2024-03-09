@@ -39,7 +39,7 @@ func GetImageNumberOfLayers(imageInspect types.ImageInspect) int {
 func GetImageFormattedCreationDate(imageInspect types.ImageInspect) string {
 	parsedTime, err := time.Parse(time.RFC3339Nano, imageInspect.Created)
 	if err != nil {
-		fmt.Println("Error parsing date:", err)
+		fmt.Println("Failed to parsing date:", err)
 		return ""
 	}
 
@@ -75,7 +75,7 @@ func GetImageNodeJsMajorVersionNumber(imageInspect types.ImageInspect) int {
 	}
 	num, err := strconv.Atoi(strings.Split(nodeVersion, ".")[0])
 	if err != nil {
-		fmt.Println("Error on get Node.js major version number", err)
+		fmt.Println("Failed to retrieve Node.js major version number", err)
 		os.Exit(1)
 	}
 	return num
@@ -134,7 +134,7 @@ func GetImageLayersWithColor(imageInspect types.ImageInspect) string {
 
 }
 
-func PrintImageAnalyzeResults(name string, imageInspect types.ImageInspect, minimal bool, ignoreSuggestions bool) {
+func PrintImageResults(name string, imageInspect types.ImageInspect, minimal bool, ignoreSuggestions bool) {
 	fmt.Printf("Details of image ")
 	GetBoldOutput().Printf("%s:\n", name)
 	fmt.Printf("  - Tags: %s\n", imageInspect.RepoTags)
@@ -180,6 +180,14 @@ func PrintImageAnalyzeResults(name string, imageInspect types.ImageInspect, mini
 			fmt.Println("  - An outdated Node.js version is detected. It's recommended to use the latest version to ensure the security of your image.")
 		}
 	}
+}
+
+func PrintImageAnalyzeResults(name string, imageInspect types.ImageInspect) {
+	PrintImageResults(name, imageInspect, false, false)
+}
+
+func PrintImageCompareResults(name string, imageInspect types.ImageInspect) {
+	PrintImageResults(name, imageInspect, true, true)
 }
 
 func PrintImageCompareLayersResults(image1 string, image1Inspect types.ImageInspect, image2 string, image2Inspect types.ImageInspect) {
@@ -294,7 +302,7 @@ func PrintImageCompareNodeJsResults(image1 string, image1Inspect types.ImageInsp
 	}
 
 	if nodeJsMajorVersion1 == nodeJsMajorVersion2 {
-		fmt.Printf("  - Both images are using the same Node.js version: %d\n.", nodeJsMajorVersion2)
+		fmt.Printf("  - Both images are using the same Node.js major version: %d\n.", nodeJsMajorVersion2)
 		return
 	}
 	fmt.Printf("  - Image ")

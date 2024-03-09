@@ -7,7 +7,7 @@ import (
 	"os/exec"
 )
 
-func Create(name string, ignoreComments bool) {
+func Create(imageName string, ignoreComments bool) {
 	utils.CreateDockerfileContent(ignoreComments)
 	utils.CreateDockerignoreContent()
 
@@ -18,17 +18,17 @@ func Create(name string, ignoreComments bool) {
 	fmt.Println("New files:")
 	successOut.Println("\tDockeryzer.Dockerfile\n\t.dockerignore")
 
-	if name == "" {
+	if imageName == "" {
 		fmt.Println("\nTo build your image, run one of the following commands::")
-		fmt.Println("- To specify a name for the image:")
-		infoOut.Println("\tdocker build -t <image-name> -f Dockeryzer.Dockerfile .")
-		fmt.Println("- To build without specifying a name:")
+		fmt.Println("- To specify a imageName for the image:")
+		infoOut.Println("\tdocker build -t <image-imageName> -f Dockeryzer.Dockerfile .")
+		fmt.Println("- To build without specifying a imageName:")
 		infoOut.Println("\tdocker build -f Dockeryzer.Dockerfile .")
 		return
 	}
 
-	infoOut.Printf("\nBuilding your image %s...\n", name)
-	cmd := exec.Command("docker", "build", "-t", name, "-f", "Dockeryzer.Dockerfile", ".")
+	infoOut.Printf("\nBuilding your image %s...\n", imageName)
+	cmd := exec.Command("docker", "build", "-t", imageName, "-f", "Dockeryzer.Dockerfile", ".")
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
