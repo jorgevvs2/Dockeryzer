@@ -6,6 +6,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"os"
+	"os/exec"
 )
 
 func getDockerClient() *client.Client {
@@ -31,4 +32,8 @@ func GetDockerImageInspectByIdOrName(idOrName string) types.ImageInspect {
 	}
 
 	return imageInspect
+}
+
+func ExecDockerBuildCommand(imageName string) *exec.Cmd {
+	return exec.Command("docker", "build", "-t", imageName, "-f", "Dockeryzer.Dockerfile", ".")
 }
