@@ -10,6 +10,8 @@ func Create(imageName string, ignoreComments bool) {
 
 	utils.ShowCreateSuccessfulOutput(imageName)
 
-	cmd := utils.ExecDockerBuildCommand(imageName)
-	utils.HandleCommandOutput(cmd)
+	if imageName != "" {
+		cmd := utils.ExecDockerBuildCommand(imageName)
+		utils.HandleCommandOutput(cmd)
+	}
 }
