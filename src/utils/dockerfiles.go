@@ -140,15 +140,13 @@ func getGenericDockerfileContentWithBuildStep(ignoreComments bool) string {
 		return `# --------------------> The build image
 FROM node:alpine AS builder
 
-WORKDIR /workspace/app
-
-COPY --chown=node:node package*.json ./
-
-RUN npm ci --only=production && npm run build && npm cache clean --force
-
 USER node:node
 
+WORKDIR /workspace/app
+
 COPY --chown=node:node . .
+
+RUN npm ci --only=production && npm run build && npm cache clean --force
 
 # --------------------> The production image
 FROM node:alpine
@@ -167,20 +165,17 @@ ENTRYPOINT ["npm", "run", "start"]
 # Use the Node.js image based on Alpine Linux as the base image for the build phase.
 FROM node:alpine AS builder
 
-# Set the working directory inside the container.
-WORKDIR /workspace/app
-
-# Copy package files (package.json and package-lock.json) to the container.
-COPY --chown=node:node package*.json ./
-
-# Install only production dependencies, build the project and clean npm cache to optimize the build process.
-RUN npm ci --only=production && npm run build && npm cache clean --force
-
 # Set the user to run subsequent commands, ensuring a secure environment.
 USER node:node
 
+# Set the working directory inside the container.
+WORKDIR /workspace/app
+
 # Copy all files from the local directory to the application's working directory in the container.
 COPY --chown=node:node . .
+
+# Install only production dependencies, build the project and clean npm cache to optimize the build process.
+RUN npm ci --only=production && npm run build && npm cache clean --force
 
 # --------------------> The production image
 # Use the Node.js image based on Alpine Linux for the production phase.
