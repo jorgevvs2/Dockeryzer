@@ -10,8 +10,6 @@ func getViteDockerfileContent(ignoreComments bool) string {
 		return `# --------------------> The build image
 FROM node:alpine AS builder
 
-USER node:node
-
 WORKDIR /workspace/app
 
 COPY --chown=node:node . /workspace/app
@@ -23,8 +21,6 @@ FROM node:alpine
 
 COPY --from=builder --chown=node:node /workspace/app/dist /app
 
-USER node
-
 WORKDIR /app
 
 CMD ["npx", "serve", "-p", "3000", "-s", "/app"]
@@ -35,9 +31,6 @@ CMD ["npx", "serve", "-p", "3000", "-s", "/app"]
 # Use the Node.js image based on Debian Bullseye for the build phase.
 # Customization suggestion: You can change the base image to a different version of Node.js, such as 'node:slim' or 'node:alpine', if necessary.
 FROM node:alpine AS builder
-
-# Set the 'node:node' user to run subsequent commands, ensuring a secure and restricted environment.
-USER node:node
 
 # Set the working directory for the application in the build phase.
 # Customization suggestion: If your application's working directory is different, you can modify it by changing the value of the WORKDIR variable.
@@ -55,9 +48,6 @@ FROM node:alpine
 
 # Copy the compiled files from the build phase to the '/app' directory in the container.
 COPY --from=builder --chown=node:node /workspace/app/dist /app
-
-# Set the default user to run subsequent commands.
-USER node
 
 # Set the working directory for the application in the production phase.
 WORKDIR /app
@@ -81,8 +71,6 @@ COPY --chown=node:node package*.json ./
 
 RUN npm ci --only=production && npm cache clean --force
 
-USER node:node
-
 COPY --chown=node:node . .
 
 # --------------------> The production image
@@ -91,8 +79,6 @@ FROM node:alpine
 WORKDIR /workspace/app
 
 COPY --from=builder --chown=node:node /workspace/app .
-
-USER node
 
 ENTRYPOINT ["npm", "run", "start"]
 `
@@ -111,9 +97,6 @@ COPY --chown=node:node package*.json ./
 # Install only production dependencies and clean npm cache to optimize the build process.
 RUN npm ci --only=production && npm cache clean --force
 
-# Set the user to run subsequent commands, ensuring a secure environment.
-USER node:node
-
 # Copy all files from the local directory to the application's working directory in the container.
 COPY --chown=node:node . .
 
@@ -127,9 +110,6 @@ WORKDIR /workspace/app
 # Copy files from the build phase to the production environment.
 COPY --from=builder --chown=node:node /workspace/app .
 
-# Set the default user to run subsequent commands.
-USER node
-
 # Define the command to start the application.
 ENTRYPOINT ["npm", "run", "start"]
 `
@@ -139,8 +119,6 @@ func getGenericDockerfileContentWithBuildStep(ignoreComments bool) string {
 	if ignoreComments == true {
 		return `# --------------------> The build image
 FROM node:alpine AS builder
-
-USER node:node
 
 WORKDIR /workspace/app
 
@@ -155,8 +133,6 @@ WORKDIR /workspace/app
 
 COPY --from=builder --chown=node:node /workspace/app/dist .
 
-USER node
-
 ENTRYPOINT ["npm", "run", "start"]
 `
 	}
@@ -164,9 +140,6 @@ ENTRYPOINT ["npm", "run", "start"]
 	return `# --------------------> The build image
 # Use the Node.js image based on Alpine Linux as the base image for the build phase.
 FROM node:alpine AS builder
-
-# Set the user to run subsequent commands, ensuring a secure environment.
-USER node:node
 
 # Set the working directory inside the container.
 WORKDIR /workspace/app
@@ -186,9 +159,6 @@ WORKDIR /workspace/app
 
 # Copy build files from the build phase to the production environment.
 COPY --from=builder --chown=node:node /workspace/app/dist .
-
-# Set the default user to run subsequent commands.
-USER node
 
 # Define the command to start the application.
 ENTRYPOINT ["npm", "run", "start"]
