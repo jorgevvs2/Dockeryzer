@@ -1,9 +1,24 @@
 package utils
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
 	"log"
 	"os"
+	"strings"
+
+	"github.com/jorgevvs2/dockeryzer/src/config"
+	"github.com/sashabaranov/go-openai"
 )
+
+type ProjectInfo struct {
+	HasPackageJson  bool              `json:"hasPackageJson"`
+	RootFiles       []string          `json:"rootFiles"`
+	Scripts         map[string]string `json:"scripts,omitempty"`
+	Dependencies    map[string]string `json:"dependencies,omitempty"`
+	DevDependencies map[string]string `json:"devDependencies,omitempty"`
+}
 
 func getViteDockerfileContent(ignoreComments bool) string {
 	if ignoreComments == true {
@@ -165,14 +180,111 @@ ENTRYPOINT ["npm", "run", "start"]
 `
 }
 
+func generateAIPrompt(info ProjectInfo, ignoreComments bool) string {
+	// Convert project info to a concise JSON string
+	infoJson, _ := json.MarshalIndent(info, "", "  ")
+
+	basePrompt := `Generate a optimized Dockerfile for a Node.js project with the following characteristics:
+%s
+
+Technical requirements:
+- Don't inform the version of the Node.js base images. Always use the latest LTS version, e.g. "node:alpine"
+- Use multi-stage builds to optimize the final image size
+- Try to keep the number of layers as low as possible
+- Try to keep the final image size as small as possible
+- Follow security best practices
+- Include only necessary files
+
+Formatting requirements:
+- Return ONLY the raw Dockerfile content without any markdown formatting, code blocks, or explanations
+- Start directly with the FROM instruction or the comment block
+- Do not include any markdown backticks or formatting
+%s
+
+Remember:
+Respond with only the raw Dockerfile content, starting with FROM (or the comment block) and no other text or formatting.`
+
+	commentInstruction := ""
+	if ignoreComments {
+		commentInstruction = "- Do not include any comments in the Dockerfile"
+	} else {
+		commentInstruction = "- Each instruction must be preceded by a comment explaining its purpose\n- Comments must be on their own lines, above their related instructions"
+	}
+
+	return fmt.Sprintf(basePrompt, string(infoJson), commentInstruction)
+}
+
 func getDockerfileContent(ignoreComments bool) string {
-	if IsViteProject() {
-		return getViteDockerfileContent(ignoreComments)
+	// Gather project information
+	info := ProjectInfo{
+		HasPackageJson: hasPackageJson(),
+		RootFiles:      GetRootFiles(),
 	}
-	if HasBuildCommand() {
-		return getGenericDockerfileContentWithBuildStep(ignoreComments)
+
+	// Only include package.json related info if it exists
+	if info.HasPackageJson {
+		info.Scripts = GetPackageJsonScripts()
+		info.Dependencies, info.DevDependencies = GetPackageJsonDependencies()
 	}
-	return getGenericDockerfileContent(ignoreComments)
+
+	// Generate AI prompt
+	prompt := generateAIPrompt(info, ignoreComments)
+
+	// Use the embedded API key
+	apiKey := config.APIKey
+	if apiKey == "" {
+		log.Fatal("API key not set in binary. Please rebuild with -ldflags")
+	}
+
+	// Show loading message
+	fmt.Println("🤖 AI is analyzing your project and generating a Dockerfile...")
+
+	// Initialize OpenAI client
+	client := openai.NewClient(apiKey)
+
+	// Create chat completion request
+	resp, err := client.CreateChatCompletion(
+		context.Background(),
+		openai.ChatCompletionRequest{
+			Model: openai.GPT4oMini,
+			Messages: []openai.ChatCompletionMessage{
+				{
+					Role:    openai.ChatMessageRoleSystem,
+					Content: "You are a Docker expert. Respond only with Dockerfile content, no explanations.",
+				},
+				{
+					Role:    openai.ChatMessageRoleUser,
+					Content: prompt,
+				},
+			},
+			Temperature: 0.2,
+		},
+	)
+
+	if err != nil {
+		fmt.Println("❌ Error generating Dockerfile with AI, falling back to default logic...")
+		if IsViteProject() {
+			return getViteDockerfileContent(ignoreComments)
+		}
+		if HasBuildCommand() {
+			return getGenericDockerfileContentWithBuildStep(ignoreComments)
+		}
+		return getGenericDockerfileContent(ignoreComments)
+	}
+
+	fmt.Println("✅ Dockerfile generated successfully!")
+
+	// Get the response content and clean up any potential markdown
+	dockerfile := resp.Choices[0].Message.Content
+	dockerfile = strings.TrimSpace(dockerfile)
+
+	// Remove any Markdown code block indicators if present
+	dockerfile = strings.TrimPrefix(dockerfile, "```dockerfile")
+	dockerfile = strings.TrimPrefix(dockerfile, "```")
+	dockerfile = strings.TrimSuffix(dockerfile, "```")
+	dockerfile = strings.TrimSpace(dockerfile)
+
+	return dockerfile
 }
 
 func CreateDockerfileContent(ignoreComments bool) {

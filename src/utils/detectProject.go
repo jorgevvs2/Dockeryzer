@@ -15,10 +15,13 @@ func hasPackageJson() bool {
 }
 
 func GetPackageJsonScripts() map[string]string {
+	if !hasPackageJson() {
+		return nil
+	}
+
 	readFile, err := os.ReadFile("./package.json")
 	if err != nil {
-		fmt.Println("Error reading package.json file:", err)
-		os.Exit(1)
+		return nil
 	}
 
 	var packageJson map[string]interface{}
@@ -73,4 +76,59 @@ func HasBuildCommand() bool {
 		}
 	}
 	return false
+}
+
+func GetPackageJsonDependencies() (map[string]string, map[string]string) {
+	if !hasPackageJson() {
+		return nil, nil
+	}
+
+	readFile, err := os.ReadFile("./package.json")
+	if err != nil {
+		return nil, nil
+	}
+
+	var packageJson map[string]interface{}
+	err = json.Unmarshal(readFile, &packageJson)
+	if err != nil {
+		fmt.Println("Error parsing package.json file:", err)
+		os.Exit(1)
+	}
+
+	dependencies := make(map[string]string)
+	devDependencies := make(map[string]string)
+
+	if deps, ok := packageJson["dependencies"].(map[string]interface{}); ok {
+		for key, value := range deps {
+			if strValue, ok := value.(string); ok {
+				dependencies[key] = strValue
+			}
+		}
+	}
+
+	if devDeps, ok := packageJson["devDependencies"].(map[string]interface{}); ok {
+		for key, value := range devDeps {
+			if strValue, ok := value.(string); ok {
+				devDependencies[key] = strValue
+			}
+		}
+	}
+
+	return dependencies, devDependencies
+}
+
+func GetRootFiles() []string {
+	files, err := os.ReadDir(".")
+	if err != nil {
+		fmt.Println("Error reading directory:", err)
+		os.Exit(1)
+	}
+
+	var fileNames []string
+	for _, file := range files {
+		if !file.IsDir() {
+			fileNames = append(fileNames, file.Name())
+		}
+	}
+	return fileNames
 }

@@ -21,18 +21,30 @@ It is a simple tool that reads the project's dependencies and creates a Dockerfi
 
 ## How to use
 
-Clone this repository:
+1. Clone this repository:
     
 ```bash
 git clone git@github.com:jorgevvs2/dockeryzer.git
 ```
 
-Build the project:
+2. Set up your OpenAI API key:
+   - Copy the `build.example.sh` file to `build.sh`
+   ```bash
+   cp build.example.sh build.sh
+   ```
+   - Edit `build.sh` and add your OpenAI API key
+   ```bash
+   # build.sh
+   API_KEY="your-openai-api-key-here"
+   ```
+
+3. Build the project:
 ```bash
-go build . -o dockeryzer
+chmod +x build.sh  # Make the build script executable
+./build.sh         # Build the project with your API key
 ```
 
-Run the project:
+4. Run the project:
 ```bash
 ./dockeryzer
 ```
@@ -41,6 +53,8 @@ You can also create an alias to run the project:
 ```bash
 alias dockeryzer="~/path/to/dockeryzer"
 ```
+
+> **Note**: The `build.sh` file is ignored by git to protect your API key. Make sure not to commit this file with your actual API key.
 
 ## Commands
 
