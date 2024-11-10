@@ -184,16 +184,20 @@ func generateAIPrompt(info ProjectInfo, ignoreComments bool) string {
 	// Convert project info to a concise JSON string
 	infoJson, _ := json.MarshalIndent(info, "", "  ")
 
-	basePrompt := `Generate a optimized Dockerfile for a Node.js project with the following characteristics:
+	basePrompt := `Generate a production-ready optimized Dockerfile for a Node.js project with the following characteristics:
 %s
 
 Technical requirements:
 - Don't inform the version of the Node.js base images. Always use the latest LTS version, e.g. "node:alpine"
+- The Dockerfile must be optimized for production use
+- Feel free to use other tools to serve the application, e.g. npx serve, nginx, etc. Make sure to import a valid base image for the tool (e.g. node:alpine for npx serve)
 - Use multi-stage builds to optimize the final image size
 - Try to keep the number of layers as low as possible
 - Try to keep the final image size as small as possible
 - Follow security best practices
 - Include only necessary files
+- Make sure the application starts correctly
+- At the end of the Dockerfile, add a comment with the "docker run" example command to start the application.
 
 Formatting requirements:
 - Return ONLY the raw Dockerfile content without any markdown formatting, code blocks, or explanations
@@ -246,7 +250,7 @@ func getDockerfileContent(ignoreComments bool) string {
 	resp, err := client.CreateChatCompletion(
 		context.Background(),
 		openai.ChatCompletionRequest{
-			Model: openai.GPT4oMini,
+			Model: openai.GPT4o,
 			Messages: []openai.ChatCompletionMessage{
 				{
 					Role:    openai.ChatMessageRoleSystem,
