@@ -188,15 +188,18 @@ func generateAIPrompt(info ProjectInfo, ignoreComments bool) string {
 %s
 
 Technical requirements:
-- Don't inform the version of the Node.js base images. Always use the latest LTS version, e.g. "node:alpine"
+- If you detect a Next.js project, please use the appropriate Node.js base image. Otherwise, use the latest LTS version, i.e. "node:alpine"
 - The Dockerfile must be optimized for production use
-- Feel free to use other tools to serve the application, e.g. npx serve, nginx, etc. Make sure to import a valid base image for the tool (e.g. node:alpine for npx serve)
+- If you detect a frontend project, feel free to use other tools to serve the application, e.g. npx serve, nginx, etc. Make sure to import a valid base image for the tool (e.g. node:alpine for npx serve)
 - Use multi-stage builds to optimize the final image size
 - Try to keep the number of layers as low as possible
 - Try to keep the final image size as small as possible
 - Follow security best practices
 - Include only necessary files
 - Make sure the application starts correctly
+- If you detect a different package manager (e.g. Yarn, pnpm), make sure to install it on the production image
+- Install dev dependencies if necessary
+- Make sure to copy all necessary files to the production image
 - At the end of the Dockerfile, add a comment with the "docker run" example command to start the application.
 
 Formatting requirements:
